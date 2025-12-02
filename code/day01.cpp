@@ -2,35 +2,37 @@
 #include <fstream>
 #include <string> // for std::stoi
 
-// Return the raw new dial position, given an inital dial position
-// and an instruction.
-int runInstruction(int dialPosition, std::string instruction)
+// Class storing the position of the dial 
+// as well as counters for Part 1 and Part 2.
+class DialState
+{
+public:
+    int dialPosition{50};
+    int part1{0};
+    int part2{0};
+};
+
+// Return the raw new dial position, 
+// given an inital dial position and an instruction.
+int getRawNewDialPosition(DialState dialState, std::string instruction)
 {
     // Extract instruction information
     std::string direction{instruction.substr(0, 1)};
     // Convert rest of string to integer
     int amount{std::stoi(instruction.substr(1))};
 
-    // std::cout
-    //     << "Performing instruction " << instruction
-    //     << " on dial position " << dialPosition
-    //     << '\n';
-
     // Compute new dial position
     int rawNewDialPosition;
     if (direction == "R")
-    {
-        rawNewDialPosition = dialPosition + amount;
-    }
+        rawNewDialPosition = dialState.dialPosition + amount;
     else
-    {
-        rawNewDialPosition = dialPosition - amount;
-    }
+        rawNewDialPosition = dialState.dialPosition - amount;
 
     return rawNewDialPosition;
 }
 
-// Count number of times dial points at zero, given the inital and final dial positions.
+// Count number of times dial points at zero, 
+// given the inital and final dial positions.
 int zeroPoints(int dialPosition, int rawNewDialPosition)
 {
     // This is a good first guess, only off by 1 in one easily catchable case.
@@ -44,10 +46,33 @@ int zeroPoints(int dialPosition, int rawNewDialPosition)
     return zeroPoints;
 }
 
+// Run the instruction on the dial,
+// updating counters for Part 1 and Part 2.
+//
+// Is the dialState parameter a copy? Or a reference? Can this be a void?
+DialState runInstruction(DialState dialState, std::string instruction)
+{
+    // Find the raw new dial position
+    int rawNewDialPosition{getRawNewDialPosition(dialState, instruction)};
+    
+    // The part 2 counter is computed using the old dial position,
+    // so this comes before dialState.dialPosition is updated. 
+    dialState.part2 += zeroPoints(dialState.dialPosition, rawNewDialPosition);
+
+    // Update dialState.dialPosition
+    dialState.dialPosition = ((rawNewDialPosition % 100) + 100) % 100;
+
+    // Increment part 1 counter (if necessary)
+    if (dialState.dialPosition == 0)
+        dialState.part1++;
+    
+    return dialState;
+}
+
 int main()
 {
     // Read input file
-    std::ifstream inf{"day02.txt"};
+    std::ifstream inf{"inputs/day01.txt"};
 
     // If we couldn't open the input file stream for reading
     if (!inf)
@@ -58,27 +83,18 @@ int main()
     }
 
     // Initialize variables
-    int dialPosition{50};
-    int part1{0};
-    int part2{0};
-    int rawNewDialPosition;
+    DialState dialState{};
 
     // Read from input stream line by line
     std::string strInput{};
     while (std::getline(inf, strInput))
     {
-        rawNewDialPosition = runInstruction(dialPosition, strInput);
-        part2 = part2 + zeroPoints(dialPosition, rawNewDialPosition);
-        dialPosition = ((rawNewDialPosition % 100) + 100) % 100;
-        if (dialPosition == 0)
-        {
-            part1++;
-        }
+        dialState = runInstruction(dialState, strInput);
     }
 
     // Output results
-    std::cout << "Part 1: " << part1 << '\n';
-    std::cout << "Part 2: " << part2 << '\n';
+    std::cout << "Part 1: " << dialState.part1 << '\n';
+    std::cout << "Part 2: " << dialState.part2 << '\n';
 
     return 0;
 
