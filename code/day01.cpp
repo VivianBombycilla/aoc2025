@@ -14,7 +14,7 @@ public:
 
 // Return the raw new dial position, 
 // given an inital dial position and an instruction.
-int getRawNewDialPosition(DialState dialState, std::string instruction)
+int getRawNewDialPosition(DialState& dialState, std::string instruction)
 {
     // Extract instruction information
     std::string direction{instruction.substr(0, 1)};
@@ -48,9 +48,7 @@ int zeroPoints(int dialPosition, int rawNewDialPosition)
 
 // Run the instruction on the dial,
 // updating counters for Part 1 and Part 2.
-//
-// Is the dialState parameter a copy? Or a reference? Can this be a void?
-DialState runInstruction(DialState dialState, std::string instruction)
+void runInstruction(DialState& dialState, std::string instruction)
 {
     // Find the raw new dial position
     int rawNewDialPosition{getRawNewDialPosition(dialState, instruction)};
@@ -65,8 +63,6 @@ DialState runInstruction(DialState dialState, std::string instruction)
     // Increment part 1 counter (if necessary)
     if (dialState.dialPosition == 0)
         dialState.part1++;
-    
-    return dialState;
 }
 
 int main()
@@ -89,7 +85,7 @@ int main()
     std::string strInput{};
     while (std::getline(inf, strInput))
     {
-        dialState = runInstruction(dialState, strInput);
+        runInstruction(dialState, strInput);
     }
 
     // Output results
