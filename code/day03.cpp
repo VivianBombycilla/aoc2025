@@ -5,27 +5,30 @@
 #include <chrono>  // for std::chrono::high_resolution_clock()
 #include <string>  // for std::getline
 
-int findLargeJoltage(std::string batteryBank)
+uint64_t findLargeJoltage(std::string batteryBank, int batteries)
 {
     size_t bankLength{batteryBank.length()};
-    char firstBattery{batteryBank[0]};
-    char secondBattery{batteryBank[1]};
-    int currIndex{1};
-    while (currIndex < bankLength)
+    int firstBatteryLoc{0}; // stores the first battery to start checking from
+    uint64_t output{0};
+    for (int i{0}; i < batteries; i++)
     {
-        char currBattery{batteryBank[currIndex]};
-        if ((currBattery > firstBattery) && (currIndex < bankLength - 1))
+        output *= 10;
+        char bestNextBattery{'0'};
+        // we start checking from the location after the previous battery
+        // and end when there will not be enough space for the rest
+        // of the batteries
+        for (int j{firstBatteryLoc}; j <= bankLength - batteries + i; j++)
         {
-            firstBattery = currBattery;
-            secondBattery = batteryBank[currIndex + 1];
-        } else if (currBattery > secondBattery)
-        {
-            secondBattery = currBattery;
+            if (batteryBank[j] > bestNextBattery)
+            {
+                bestNextBattery = batteryBank[j];
+                firstBatteryLoc = j + 1;
+            }
         }
-        currIndex ++;
+        output += (bestNextBattery - '0');
     }
-
-    return (firstBattery - '0') * 10 + (secondBattery - '0');
+    // std::cout << output << "\n";
+    return output;
 }
 
 int main()
@@ -42,12 +45,15 @@ int main()
     }
 
     std::string strInput{};
-    int part1{};
+    uint64_t part1{};
+    uint64_t part2{};
     while (std::getline(inf, strInput))
     {
         // std::cout << strInput[0] << "\n";
-        part1 += findLargeJoltage(strInput);
+        part1 += findLargeJoltage(strInput, 2);
+        part2 += findLargeJoltage(strInput, 12);
     }
     std::cout << part1 << "\n";
+    std::cout << part2 << "\n";
     return 0;
 }
