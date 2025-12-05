@@ -44,6 +44,8 @@ int main()
         return 1;
     }
 
+    auto start{std::chrono::high_resolution_clock::now()};
+
     std::string strInput{};
     uint64_t part1{};
     uint64_t part2{};
@@ -53,7 +55,13 @@ int main()
         part1 += findLargeJoltage(strInput, 2);
         part2 += findLargeJoltage(strInput, 12);
     }
-    std::cout << part1 << "\n";
-    std::cout << part2 << "\n";
+    
+    std::cout << "Part 1: " << part1 << "\n";
+    std::cout << "Part 2: " << part2 << "\n";
+
+    auto stop{std::chrono::high_resolution_clock::now()};
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << "Time: " << duration.count() << " microseconds\n";
+    
     return 0;
 }

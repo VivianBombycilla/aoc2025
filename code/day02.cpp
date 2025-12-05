@@ -164,6 +164,7 @@ int main()
         if (c == '\n')
             break;
     }
+    
     std::cout << "Part 1: " << state.part1 << "\n";
     std::cout << "Part 2: " << state.part2 << "\n";
 
