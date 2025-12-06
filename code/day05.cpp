@@ -4,9 +4,9 @@
 #include <cstdint> // for fixed width integers
 #include <chrono>  // for std::chrono::high_resolution_clock()
 #include <string>  // for std::getline
-#include <vector>
-#include <array>
-#include <sstream>
+#include <vector>  // for std::vector
+#include <array>   // for std::array
+#include <sstream> // for std::istringstream
 
 class Answer
 {
