@@ -17,19 +17,6 @@ public:
     uint64_t part2{0};
 };
 
-class ProblemSet
-{
-public:
-    std::vector<std::vector<std::string>> rawProblemSet{};
-    int problemLength{};
-    int problemCount{};
-    void setStats()
-    {
-        problemLength = rawProblemSet.size() - 1;
-        problemCount = rawProblemSet.at(0).size();
-    }
-};
-
 // Prints vector
 void printVector(std::vector<std::string> v)
 {
@@ -55,34 +42,69 @@ std::vector<std::string> splitBySpaces(std::string str)
     return output;
 }
 
-Answer findAnswer(ProblemSet problemSet)
+class ProblemSet
 {
-    Answer answer{};
-    // For each problem
-    for (int i{0}; i < problemSet.problemCount; i++)
+private:
+    // Find the locations of the non-space characters
+    // in the last element of `rawProblemSet`.
+    void setOperationLocs()
     {
-        // collect problem type
-        char c{problemSet.rawProblemSet.at(problemSet.problemLength).at(i)[0]};
-        std::cout << "c: " << c << "\n";
-        // compute the problem
-        uint64_t problemAnswer{};
-        switch (c)
+        for (int i{0}; i < operationStr.length(); i++)
         {
-            case '+':
-                problemAnswer = 0;
-                break;
-            case '*':
-                problemAnswer = 1;
-                break;
+            if (!(operationStr[i] == ' '))
+            {
+                operationLocs.push_back(i);
+            }
         }
+    }
 
-        std::cout << "problemAnswer: " << problemAnswer << "\n";
-        for (int j{0}; j < problemSet.problemLength; j++)
+    // Set the `part2Problems` parameter
+    void setPart2Problems()
+    {
+        // Do up to the last problem
+        for (int i{0}; i < operationLocs.size() - 1; i++)
         {
-            uint64_t nextNumber{std::stoull(problemSet.rawProblemSet.at(j).at(i))};
-            std::cout << "nextNumber: " << nextNumber << "\n";
+            part2Problems.push_back(std::make_pair(operationLocs.at(i), operationLocs.at(i + 1) - 2));
+        }
+        part2Problems.push_back(std::make_pair(operationLocs.back(), operationStr.length() - 1));
+    }
 
-            switch (c)
+    // Find the number represented in the column for part 2.
+    uint64_t findPart2Number(int col)
+    {
+        uint64_t output{0};
+        // Traverse the rows of `rawProblemSet`
+        for (int i{0}; i < part1ProblemLength; i++)
+        {
+            char c{rawProblemSet.at(i).at(col)};
+            if (!(c == ' '))
+            {
+                c = c - '0';
+                output = 10 * output + c;
+            }
+        }
+        return output;
+    }
+
+    // Do the part 2 computation for this problem with this symbol.
+    uint64_t doComputation(std::pair<int, int> problem, char symbol)
+    {
+        // Initialize problemAnswer to the right value.
+        uint64_t problemAnswer{};
+        switch (symbol)
+        {
+        case '+':
+            problemAnswer = 0;
+            break;
+        case '*':
+            problemAnswer = 1;
+            break;
+        }
+        for (int col{problem.first}; col <= problem.second; col++)
+        {
+            uint64_t nextNumber{findPart2Number(col)};
+
+            switch (symbol)
             {
             case '+':
                 problemAnswer += nextNumber;
@@ -92,10 +114,102 @@ Answer findAnswer(ProblemSet problemSet)
                 break;
             }
         }
-        std::cout << "c: " << c << "\n";
-        std::cout << "problemAnswer: " << problemAnswer << "\n";
-        answer.part1 += problemAnswer;
+        return problemAnswer;
     }
+public:
+    std::vector<std::string> rawProblemSet{};
+    std::vector<std::vector<std::string>> splitProblemSet{};
+
+    // Dimensions of the part 1 grid
+    int part1ProblemLength{};
+    int part1ProblemCount{};
+
+    // The last string in `rawProblemSet`
+    std::string operationStr{};
+
+    // Location of operations within `operationStr`
+    std::vector<int> operationLocs{};
+
+    // Stores the start and end column of each part 2 problem
+    std::vector<std::pair<int, int>> part2Problems{};
+
+    ProblemSet(std::vector<std::string> rawProblemSet)
+        : rawProblemSet{rawProblemSet}
+    {
+        // Set `splitProblemSet`
+        for (std::string str : rawProblemSet)
+        {
+            splitProblemSet.push_back(splitBySpaces(str));
+        }
+
+        // Set relevant variables for part 1.
+        part1ProblemLength = splitProblemSet.size() - 1;
+        part1ProblemCount = splitProblemSet.at(0).size();
+
+        // Set relevant variables for part 2.
+        operationStr = rawProblemSet.back();
+        setOperationLocs();
+        setPart2Problems();
+    }
+
+    // Do computation for Part 1
+    uint64_t findPart1()
+    {
+        uint64_t part1{};
+        // For each problem
+        for (int i{0}; i < part1ProblemCount; i++)
+        {
+            // collect problem type
+            char c{splitProblemSet.at(part1ProblemLength).at(i)[0]};
+
+            // compute the problem
+            uint64_t problemAnswer{};
+            switch (c)
+            {
+            case '+':
+                problemAnswer = 0;
+                break;
+            case '*':
+                problemAnswer = 1;
+                break;
+            }
+
+            for (int j{0}; j < part1ProblemLength; j++)
+            {
+                uint64_t nextNumber{std::stoull(splitProblemSet.at(j).at(i))};
+
+                switch (c)
+                {
+                case '+':
+                    problemAnswer += nextNumber;
+                    break;
+                case '*':
+                    problemAnswer *= nextNumber;
+                    break;
+                }
+            }
+
+            part1 += problemAnswer;
+        }
+        return part1;
+    }
+
+    uint64_t findPart2()
+    {
+        uint64_t part2{0};
+        for (std::pair<int, int> problem : part2Problems)
+        {
+            part2 += doComputation(problem, rawProblemSet.back().at(problem.first));
+        }
+        return part2;
+    }
+};
+
+Answer findAnswer(ProblemSet problemSet)
+{
+    Answer answer{};
+    answer.part1 = problemSet.findPart1();
+    answer.part2 = problemSet.findPart2();
     return answer;
 }
 
@@ -115,14 +229,15 @@ int main()
     auto start{std::chrono::high_resolution_clock::now()};
 
     // Parse the input
-    ProblemSet problemSet{};
+    std::vector<std::string> rawProblemSet;
     std::string strInput{};
     while (std::getline(inf, strInput))
     {
-        problemSet.rawProblemSet.push_back(splitBySpaces(strInput));
+        rawProblemSet.push_back(strInput);
     }
-    problemSet.setStats();
 
+    // Initialize our `ProblemSet`
+    ProblemSet problemSet{rawProblemSet};
     Answer answer{findAnswer(problemSet)};
 
     auto stop{std::chrono::high_resolution_clock::now()};
